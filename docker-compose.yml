@@ -1,0 +1,78 @@
+version: '2'
+services:
+  kankan-cent: 
+    container_name: kankan-cent
+    build: ./centos
+    ports: 
+      - "80:80"
+    environment:
+      - "TZ=Asia/Tokyo"
+    links: 
+      - kankan-php
+      - kankan-mysql
+    # volumes:
+    #   - ./centos/setting/nginx/server.conf:/etc/nginx/conf.d/server.conf
+    volumes_from:
+      - wwwdata
+    networks:
+      - kankan-net
+    privileged: true
+    tty: true
+
+  kankan-php: 
+    container_name: kankan-php
+    build: ./php7
+    links: 
+      - kankan-mysql
+    # volumes:
+    #   - ./setting/php7/php.ini:/usr/local/etc/php/php.ini
+    volumes_from:
+      - wwwdata
+    networks:
+      - kankan-net
+    depends_on:
+      - "kankan-mysql"
+    privileged: true
+    tty: true
+
+  kankan-mysql:
+    container_name: kankan-mysql
+    image: mysql:5.7
+    volumes:
+      - ./mysql:/etc/mysql/conf.d
+    ports: 
+      - "3306:3306"
+    # volumes_from:
+    #   - sqldata
+    networks:
+      - kankan-net
+    environment:
+      - "MYSQL_ROOT_USER=kankan"
+      - "MYSQL_ROOT_PASSWORD=rootpass"
+      - "MYSQL_ALLOW_EMPTY_PASSWORD=no"
+      - "MYSQL_DATABASE=test"
+      - "MYSQL_USER=kan"
+      - "MYSQL_PASSWORD=passpass"
+      - "TZ=Asia/Tokyo"
+    privileged: true
+    tty: true
+
+  # sqldata:
+  #   container_name: sqldata
+  #   image: busybox
+  #   volumes:
+  #     - ./data/mysql:/var/lib/mysql/data
+  #   networks:
+  #     - kankan-net
+
+  wwwdata:
+    container_name: wwwdata
+    image: busybox
+    volumes:
+      - ./data/www:/var/www/html
+    networks:
+      - kankan-net
+
+networks:
+  kankan-net:
+    driver: bridge
