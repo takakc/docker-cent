@@ -15,8 +15,10 @@ services:
     volumes_from:
       - wwwdata
     networks:
-      - kankan-net
+      kankan-net:
+        ipv4_address: 172.18.0.10
     privileged: true
+    stdin_open: true
     tty: true
 
   kankan-php: 
@@ -29,10 +31,12 @@ services:
     volumes_from:
       - wwwdata
     networks:
-      - kankan-net
+      kankan-net:
+        ipv4_address: 172.18.0.15
     depends_on:
       - "kankan-mysql"
     privileged: true
+    stdin_open: true
     tty: true
 
   kankan-mysql:
@@ -44,18 +48,15 @@ services:
       - ./mysql/sql:/docker-entrypoint-initdb.d
     ports: 
       - "3306:3306"
-    # volumes_from:
-    #   - sqldata
     networks:
-      - kankan-net
+      kankan-net:
+        ipv4_address: 172.18.0.20
     environment:
-      - "MYSQL_ROOT_USER=kankan"
-      - "MYSQL_ROOT_PASSWORD=rootpass"
-      - "MYSQL_ALLOW_EMPTY_PASSWORD=no"
-      - "MYSQL_DATABASE=test"
-      - "MYSQL_USER=kan"
-      - "MYSQL_PASSWORD=passpass"
-      - "TZ=Asia/Tokyo"
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: test
+      MYSQL_USER: kan
+      MYSQL_PASSWORD: passpass
+      TZ: Asia/Tokyo
     privileged: true
     tty: true
 
@@ -67,6 +68,9 @@ services:
       - 8080:80
     volumes:
       - /sessions
+    networks:
+      kankan-net:
+        ipv4_address: 172.18.0.30
 
   wwwdata:
     container_name: wwwdata
@@ -74,8 +78,14 @@ services:
     volumes:
       - ./data/www:/var/www/html
     networks:
-      - kankan-net
+      kankan-net:
+        ipv4_address: 172.18.0.40
 
 networks:
   kankan-net:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
